@@ -26,16 +26,16 @@ async def main() -> None:
         AzureCliCredential() as credential,
         AIProjectClient(endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"], credential=credential) as project_client,
     ):
-        github_connection_name = "GitHub"
-        github_connection_target = None
+        mcp_connection_name = "GitHub"
+        mcp_connection_target = None
         async for connection in project_client.connections.list():
-            if connection.name == github_connection_name:
-                github_connection_target = connection.target
-                print(f"Found GitHub connection target: {github_connection_target}")
+            if connection.name == mcp_connection_name:
+                mcp_connection_target = connection.target
+                print(f"Found MCP connection target: {mcp_connection_target}")
 
-        if not github_connection_target:
+        if not mcp_connection_target:
             raise RuntimeError(
-                f"Could not find a Project connection named '{github_connection_name}'. "
+                f"Could not find a Project connection named '{mcp_connection_name}'. "
                 "Check the connection name in Foundry or update the script."
             )
 
@@ -44,8 +44,8 @@ async def main() -> None:
             "server_label": "GitHubTool",
             # When using a Foundry Project Connection, the MCP server URL is the connection target
             # (often an AI Foundry gateway URL), and the auth is resolved via project_connection_id.
-            "server_url": github_connection_target,
-            "project_connection_id": github_connection_name,
+            "server_url": mcp_connection_target,
+            "project_connection_id": mcp_connection_name,
         }
         # Create agent that does not ask for approval for MCP tool calls
         azure_ai_agent = await project_client.agents.create_version(
