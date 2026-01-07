@@ -1,6 +1,9 @@
 # af-agents
 
-Simple, minimal examples of creating and running **durable Azure AI Foundry Agents** that can call **MCP (Model Context Protocol)** tools via a Foundry Project connection.
+Simple, minimal examples of creating and running **durable Azure AI Foundry Agents** that can call:
+
+- **MCP (Model Context Protocol)** tools via a Foundry Project connection
+- **File Search** against an Azure AI **Vector Store**
 
 This repo focuses on two things:
 
@@ -9,9 +12,10 @@ This repo focuses on two things:
 
 ## What’s in this repo
 
+- `create_vector_store.py` uploads local files and creates a Vector Store in your Project.
 - `create_agent.py` creates two agent versions:
-	- `MCPAgentNoAsk`: MCP tool calls don’t require approval
-	- `MCPAgentAsk`: MCP tool calls always require approval
+  - `MCPAgentNoAsk`: MCP tool calls don’t require approval
+  - `MCPAgentAsk`: MCP tool calls always require approval
 - `run_agent.py` runs an interactive chat loop against an existing agent and handles approval requests during streaming.
 
 ## Prerequisites
@@ -20,8 +24,9 @@ This repo focuses on two things:
 - An **Azure AI Foundry Project** (Azure AI Projects)
 - A **model deployment** available to the Project (you’ll reference it by deployment name)
 - Azure CLI authenticated locally:
-	- `az login`
+  - `az login`
 - A **Foundry Project connection** that provides an MCP endpoint.
+- A **Vector Store** in the Project (for File Search). You can create one with `create_vector_store.py`.
 
 This sample assumes you already have a Project connection named **`GitHub`** configured in Foundry (see `create_agent.py`). If your connection name differs, update the script.
 
@@ -50,7 +55,7 @@ Both scripts load environment variables via `python-dotenv`, so the easiest path
 Copy the example and edit it:
 
 ```bash
-cp .env.example .env
+cp env.sample .env
 ```
 
 Or create `.env` manually with:
@@ -58,6 +63,13 @@ Or create `.env` manually with:
 ```bash
 AZURE_AI_PROJECT_ENDPOINT="https://<your-project-name>.<region>.api.azureml.ms"
 AZURE_AI_MODEL_DEPLOYMENT_NAME="<your-model-deployment-name>"
+
+# Vector Store used by the agent's File Search tool
+VECTOR_STORE_NAME="my_vectorstore"
+
+# Used by create_vector_store.py
+FILE_PATTERNS="resources/*.pdf"
+FILE_CONFLICT_ACTION="ask"
 
 # Optional: which agent to run (defaults to MCPAgentNoAsk)
 AZURE_AI_AGENT_NAME="MCPAgentNoAsk"
@@ -71,8 +83,19 @@ Required variables:
 Optional variables:
 
 - `AZURE_AI_AGENT_NAME`: which agent name `run_agent.py` connects to
+- `VECTOR_STORE_NAME`: Vector Store name the agent will use for File Search (defaults to `my_vectorstore`)
+- `FILE_PATTERNS`: comma-separated glob patterns for local files to upload (defaults to `resources/*.pdf`)
+- `FILE_CONFLICT_ACTION`: what to do if a filename already exists (`ask`, `reuse`, `upload`, `overwrite`; defaults to `ask`)
 
-### 4) Create agent versions in Foundry
+### 4) Create a Vector Store (for File Search)
+
+```bash
+python create_vector_store.py
+```
+
+This uploads local files (from `FILE_PATTERNS`) and creates a Vector Store named `VECTOR_STORE_NAME`.
+
+### 5) Create agent versions in Foundry
 
 ```bash
 python create_agent.py
@@ -80,7 +103,7 @@ python create_agent.py
 
 This will create/update agent versions named `MCPAgentNoAsk` and `MCPAgentAsk`.
 
-### 5) Run the agent
+### 6) Run the agent
 
 ```bash
 python run_agent.py
@@ -111,6 +134,7 @@ If you want to use a different connection or a different MCP server:
 ## Troubleshooting
 
 - If `create_agent.py` says it can’t find the `GitHub` connection, confirm the connection name in your Foundry Project and update the script.
+- If `create_agent.py` says it can’t find the Vector Store, run `create_vector_store.py` first and confirm `VECTOR_STORE_NAME` matches the Vector Store name in Foundry.
 - If authentication fails, re-run `az login` and confirm your account has access to the Foundry Project.
 - If the model deployment can’t be found, verify `AZURE_AI_MODEL_DEPLOYMENT_NAME` matches the deployment name in Foundry.
 
@@ -121,9 +145,9 @@ Contributions are welcome.
 - Open an issue describing the change (or the bug/feature).
 - Keep PRs small and focused.
 - If you add new samples, prefer:
-	- a single entrypoint script
-	- clear environment variable names
-	- minimal dependencies
+  - a single entrypoint script
+  - clear environment variable names
+  - minimal dependencies
 
 ## License
 
